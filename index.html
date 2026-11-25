@@ -7,6 +7,11 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@600;800&display=swap" rel="stylesheet">
 <style id="css">
+/* VOICE: grafismo de televisión deportiva, gamberro y con orgullo de barrio
+   IDEA: la "mosca" del marcador de una retransmisión, con la estética de las publicaciones del club
+   PICTURE: la barra del marcador con el escudo de la jarra-balón
+   COLOUR and TYPE: negro #111, fucsia #ff2d8a, crema #f6ecd8, oro #e8a317 · Anton + Barlow Condensed
+   LAYOUT: modo marcador = solo la barra llenando el widget; #panel = mando a distancia para el móvil */
 :root{color-scheme:normal;--pk:#ff2d8a;--bk:#111;--cr:#f6ecd8;--au:#e8a317;--bg:#140a11}
 *{box-sizing:border-box;min-width:0}
 html,body{margin:0;background:transparent}
@@ -17,6 +22,7 @@ html.p{color-scheme:dark;background:var(--bg)}
 body.p{background:var(--bg)}
 .ov{position:fixed;inset:0;display:flex;align-items:flex-end;justify-content:flex-start}
 .bar{display:flex;align-items:stretch;height:4.4em;filter:drop-shadow(0 .25em .35em rgba(0,0,0,.45));position:relative}
+
 .seg{display:flex;align-items:center;white-space:nowrap}
 .esc{background:var(--pk);padding:0 .45em;clip-path:polygon(0 0,100% 0,100% 100%,0 100%)}
 .esc svg{width:3.6em;height:3.6em;display:block}
@@ -62,6 +68,8 @@ label{display:block;font-size:15px;color:#cdbfc6;margin-bottom:6px}
 .ayuda{font-size:15px;color:#cdbfc6}
 .ayuda code{color:var(--cr);overflow-wrap:anywhere}
 .nota{font-size:13px;color:#a8949e;margin-top:6px}
+.chk{display:flex;align-items:center;gap:10px;margin:14px 0 0;font-size:16px;color:var(--cr);cursor:pointer}
+.chk input{width:24px;height:24px;min-height:0;accent-color:var(--pk)}
 </style>
 </head>
 <body>
@@ -92,6 +100,9 @@ function barra(){
   <div class="seg rel"><b class="t">${fmt(ms())}</b><i>${esc(etiqueta(S.parte))}</i></div>${g}</div>`;
 }
 let estado='',tipoEstado='';
+const HIMNO=new Audio('estribillo.mp3?v=1');HIMNO.preload='auto';
+const suena=()=>{try{HIMNO.currentTime=0;const p=HIMNO.play();if(p)p.catch(()=>{})}catch(e){}};
+let sonPanel=true;try{sonPanel=localStorage.getItem('sonPanel')!=='0'}catch(e){}
 function panel(){
   const P=["1ª","Descanso","2ª","Final"];
   return `<div class="wrap">
@@ -107,7 +118,8 @@ function panel(){
       <div class="fila"><button class="men" data-a="gl-">−</button><button class="big" data-a="gl+">+ GOL</button></div></div>
     <div class="eq"><div class="n">${esc(S.rival)}</div><div class="v">${S.gv}</div>
       <div class="fila"><button class="men" data-a="gv-">−</button><button class="big" data-a="gv+">+ GOL</button></div></div>
-  </div></div>
+  </div>
+  <label class="chk"><input type="checkbox" id="son" ${sonPanel?'checked':''}> Que suene el himno en este móvil cuando marque el Aston Birra</label></div>
   <div class="card"><h2>Reloj</h2>
     <div class="reloj t">${fmt(ms())}</div>
     <div class="fila" style="margin:8px 0 12px">
@@ -163,7 +175,7 @@ function aplica(txt,edad){
   if(pend)return;
   const corr=!!n.corriendo,reloj=(typeof n.reloj==='number'?n.reloj:0)+(corr?Math.max(0,edad||0):0);
   const gk=n.gol?n.gol.e+n.gol.t:null,nuevo=!!gk&&gk!==golVisto&&(edad||0)<7000;
-  golVisto=gk;if(nuevo)golLocal={e:n.gol.e,t:Date.now()};
+  golVisto=gk;if(nuevo){golLocal={e:n.gol.e,t:Date.now()};if(n.gol.e==='L'&&modo()==='marcador')suena()}
   const vis=JSON.stringify([n.rival,n.gl,n.gv,n.parte,n.dur]);
   S=Object.assign({},DEF,n,{acum:reloj,desde:Date.now(),corriendo:corr,gol:golLocal});delete S.reloj;delete S.de;
   if(vis!==ultVis||nuevo){ultVis=vis;const a=document.activeElement;if(!(modo()==='panel'&&a&&a.tagName==='INPUT'))render()}
@@ -184,7 +196,7 @@ function conecta(){
 root.addEventListener('click',ev=>{
   const b=ev.target.closest('button[data-a]');if(!b)return;const a=b.dataset.a;
   if(a==='riv'){guardaRival();return}
-  if(a==='gl+')cambia(s=>{s.gl++;s.gol={e:'L',t:Date.now()}});
+  if(a==='gl+'){if(sonPanel)suena();cambia(s=>{s.gl++;s.gol={e:'L',t:Date.now()}})}
   else if(a==='gv+')cambia(s=>{s.gv++;s.gol={e:'V',t:Date.now()}});
   else if(a==='gl-')cambia(s=>{s.gl=Math.max(0,s.gl-1);s.gol=null});
   else if(a==='gv-')cambia(s=>{s.gv=Math.max(0,s.gv-1);s.gol=null});
@@ -203,7 +215,8 @@ function guardaRival(){const t=document.getElementById('riv');if(!t)return;const
 root.addEventListener('keydown',ev=>{if(ev.target.id==='riv'&&ev.key==='Enter'){ev.preventDefault();guardaRival()}});
 root.addEventListener('change',ev=>{
   const t=ev.target;
-  if(t.id==='riv')guardaRival();
+  if(t.id==='son'){sonPanel=t.checked;try{localStorage.setItem('sonPanel',sonPanel?'1':'0')}catch(e){}}
+  else if(t.id==='riv')guardaRival();
   else if(t.id==='dur'){const v=parseInt(t.value,10);if(v>0&&v<=60&&v!==S.dur)cambia(s=>{s.dur=v})}
 });
 addEventListener('hashchange',render);
