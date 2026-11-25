@@ -7,11 +7,6 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@600;800&display=swap" rel="stylesheet">
 <style id="css">
-/* VOICE: grafismo de televisión deportiva, gamberro y con orgullo de barrio
-   IDEA: la "mosca" del marcador de una retransmisión, con la estética de las publicaciones del club
-   PICTURE: la barra del marcador con el escudo de la jarra-balón
-   COLOUR and TYPE: negro #111, fucsia #ff2d8a, crema #f6ecd8, oro #e8a317 · Anton + Barlow Condensed
-   LAYOUT: modo marcador = solo la barra llenando el widget; #panel = mando a distancia para el móvil */
 :root{color-scheme:normal;--pk:#ff2d8a;--bk:#111;--cr:#f6ecd8;--au:#e8a317;--bg:#140a11}
 *{box-sizing:border-box;min-width:0}
 html,body{margin:0;background:transparent}
@@ -22,7 +17,6 @@ html.p{color-scheme:dark;background:var(--bg)}
 body.p{background:var(--bg)}
 .ov{position:fixed;inset:0;display:flex;align-items:flex-end;justify-content:flex-start}
 .bar{display:flex;align-items:stretch;height:4.4em;filter:drop-shadow(0 .25em .35em rgba(0,0,0,.45));position:relative}
-
 .seg{display:flex;align-items:center;white-space:nowrap}
 .esc{background:var(--pk);padding:0 .45em;clip-path:polygon(0 0,100% 0,100% 100%,0 100%)}
 .esc svg{width:3.6em;height:3.6em;display:block}
@@ -153,27 +147,37 @@ function ajusta(){
 addEventListener('resize',ajusta);
 if(document.fonts&&document.fonts.ready)document.fonts.ready.then(ajusta);
 function aviso(t,k){estado=t;tipoEstado=k||'';const e=document.getElementById('st');if(e){e.textContent=t;e.className='st '+tipoEstado}}
-let tmr=null,pend=false,ult='';
-const TOPIC='astonbirra-2eaa35fd975f',NT='https://ntfy.sh/'+TOPIC;
-function guardar(){clearTimeout(tmr);pend=true;aviso('Enviando…');tmr=setTimeout(async()=>{
-  try{const r=await fetch(NT,{method:'POST',body:JSON.stringify(S)});if(!r.ok)throw 0;aviso('Enviado al directo ✓','ok')}
-  catch(e){aviso('No se pudo enviar. Revisa la conexión y repite.','er')}
-  pend=false;
-},300)}
-function cambia(fn){fn(S);ult=JSON.stringify(S);render();guardar()}
-function aplica(txt){
-  try{const n=Object.assign({},DEF,JSON.parse(txt)),j=JSON.stringify(n);
-    if(j===ult||pend)return;ult=j;S=n;
-    const a=document.activeElement;if(!(modo()==='panel'&&a&&a.tagName==='INPUT'))render()}catch(e){}
+let tmr=null,pend=false,ultVis='',golVisto=null,golLocal=null;
+const TOPIC='astonbirra-2eaa35fd975f',NT='https://ntfy.sh/'+TOPIC,YO=Math.random().toString(36).slice(2);
+const paquete=()=>JSON.stringify(Object.assign({},S,{reloj:ms(),de:YO}));
+async function envia(callado,cuerpo){
+  try{const r=await fetch(NT,{method:'POST',body:cuerpo||paquete()});if(!r.ok)throw 0;if(!callado)aviso('Enviado al directo ✓','ok')}
+  catch(e){if(!callado)aviso('No se pudo enviar. Revisa la conexión y repite.','er')}
+}
+function guardar(){clearTimeout(tmr);pend=true;aviso('Enviando…');tmr=setTimeout(async()=>{await envia(false);pend=false},300)}
+function cambia(fn){fn(S);golLocal=S.gol;ultVis=JSON.stringify([S.rival,S.gl,S.gv,S.parte,S.dur]);render();guardar()}
+function aplica(txt,edad){
+  let n;try{n=JSON.parse(txt)}catch(e){return}
+  if(!n||n.de===YO)return;
+  if(n.hola){if(modo()==='panel')envia(true);return}
+  if(pend)return;
+  const corr=!!n.corriendo,reloj=(typeof n.reloj==='number'?n.reloj:0)+(corr?Math.max(0,edad||0):0);
+  const gk=n.gol?n.gol.e+n.gol.t:null,nuevo=!!gk&&gk!==golVisto&&(edad||0)<7000;
+  golVisto=gk;if(nuevo)golLocal={e:n.gol.e,t:Date.now()};
+  const vis=JSON.stringify([n.rival,n.gl,n.gv,n.parte,n.dur]);
+  S=Object.assign({},DEF,n,{acum:reloj,desde:Date.now(),corriendo:corr,gol:golLocal});delete S.reloj;delete S.de;
+  if(vis!==ultVis||nuevo){ultVis=vis;const a=document.activeElement;if(!(modo()==='panel'&&a&&a.tagName==='INPUT'))render()}
 }
 async function cargaInicial(){
   try{const r=await fetch(NT+'/json?poll=1&since=12h');const ls=(await r.text()).trim().split('\n').filter(Boolean);
-    for(let i=ls.length-1;i>=0;i--){const d=JSON.parse(ls[i]);if(d.event==='message'&&d.message){aplica(d.message);break}}}catch(e){}
+    for(let i=ls.length-1;i>=0;i--){const d=JSON.parse(ls[i]);if(d.event!=='message'||!d.message)continue;
+      let n;try{n=JSON.parse(d.message)}catch(e){continue}if(!n||n.hola)continue;
+      aplica(d.message,Date.now()-d.time*1000);break}}catch(e){}
 }
 function conecta(){
   try{const es=new EventSource(NT+'/sse');
-    es.onmessage=e=>{try{const d=JSON.parse(e.data);if(d.event==='message'&&d.message)aplica(d.message)}catch(x){}};
-    es.onopen=()=>{if(modo()==='panel'&&!estado)aviso('Conectado ✓','ok')};
+    es.onmessage=e=>{try{const d=JSON.parse(e.data);if(d.event==='message'&&d.message)aplica(d.message,0)}catch(x){}};
+    es.onopen=()=>{if(modo()==='marcador')envia(true,JSON.stringify({hola:1,de:YO}));else if(!estado)aviso('Conectado ✓','ok')};
     es.onerror=()=>{if(modo()==='panel')aviso('Reconectando…','er')};
   }catch(e){setInterval(cargaInicial,3000)}
 }
