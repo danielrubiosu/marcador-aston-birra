@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Marcador Aston Birra</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@600;800&display=swap" rel="stylesheet">
+<style id="css">
+/* VOICE: grafismo de televisión deportiva, gamberro y con orgullo de barrio
+   IDEA: la "mosca" del marcador de una retransmisión, con la estética de las publicaciones del club
+   PICTURE: la barra del marcador con el escudo de la jarra-balón
+   COLOUR and TYPE: negro #111, fucsia #ff2d8a, crema #f6ecd8, oro #e8a317 · Anton + Barlow Condensed
+   LAYOUT: modo marcador = solo la barra llenando el widget; #panel = mando a distancia para el móvil */
+:root{color-scheme:normal;--pk:#ff2d8a;--bk:#111;--cr:#f6ecd8;--au:#e8a317;--bg:#140a11}
+*{box-sizing:border-box;min-width:0}
+html,body{margin:0;background:transparent}
+html.m,html.m body{background:transparent!important;background-color:rgba(0,0,0,0)!important}
+body{font:16px/1.5 "Barlow Condensed",system-ui,sans-serif;color:var(--cr);overflow-x:clip}
+body.m{overflow:hidden}
+html.p{color-scheme:dark;background:var(--bg)}
+body.p{background:var(--bg)}
+.ov{position:fixed;inset:0;display:flex;align-items:flex-end;justify-content:flex-start}
+.bar{display:flex;align-items:stretch;height:4.4em;filter:drop-shadow(0 .25em .35em rgba(0,0,0,.45));position:relative}
+
+.seg{display:flex;align-items:center;white-space:nowrap}
+.esc{background:var(--pk);padding:0 .45em;clip-path:polygon(0 0,100% 0,100% 100%,0 100%)}
+.esc svg{width:3.6em;height:3.6em;display:block}
+.nom{background:var(--bk);font-family:Anton,Impact,sans-serif;font-size:1.75em;letter-spacing:.02em;padding:0 .55em;text-transform:uppercase;max-width:8.5em;overflow:hidden;text-overflow:ellipsis;display:block;line-height:2.52em}
+.res{background:var(--pk);color:var(--bk);font-family:Anton,Impact,sans-serif;font-size:2.6em;padding:0 .35em;line-height:1.7em;transform:skewX(-8deg);margin:0 -.08em;position:relative;z-index:1;box-shadow:0 0 0 .06em var(--bk)}
+.res span{display:inline-block;transform:skewX(8deg)}
+.riv{background:#2a2a2a;padding:0 .45em}
+.riv .ini{width:3.6em;height:3.6em;border-radius:50%;background:var(--cr);color:var(--bk);display:grid;place-items:center;font-family:Anton,Impact,sans-serif;font-size:1em;border:.22em solid var(--bk)}
+.rel{background:var(--cr);color:var(--bk);flex-direction:column;justify-content:center;padding:0 .7em;line-height:1}
+.rel b{font-family:Anton,Impact,sans-serif;font-size:1.9em;font-weight:400;font-variant-numeric:tabular-nums}
+.rel i{font-style:normal;font-weight:800;font-size:1em;color:var(--pk);background:var(--bk);padding:.1em .4em;margin-top:.25em;letter-spacing:.04em}
+.gol{position:absolute;inset:0;z-index:3;display:grid;place-items:center;background:var(--pk);color:var(--bk);font-family:Anton,Impact,sans-serif;font-size:2.3em;text-transform:uppercase;animation:gol 7s ease forwards;pointer-events:none;white-space:nowrap;overflow:hidden}
+.gol.r{background:var(--cr)}
+@keyframes gol{0%{clip-path:inset(0 100% 0 0)}8%,88%{clip-path:inset(0 0 0 0)}100%{clip-path:inset(0 0 0 100%)}}
+@media (prefers-reduced-motion:reduce){.gol{animation:none;opacity:0}}
+.wrap{max-width:720px;margin:0 auto;padding:20px 16px 48px}
+h1{font-family:Anton,Impact,sans-serif;font-weight:400;font-size:clamp(32px,8vw,48px);line-height:1.05;margin:4px 0 2px;text-transform:uppercase}
+h1 em{font-style:normal;color:var(--pk)}
+.st{font-size:15px;color:#cdbfc6;min-height:1.5em;margin:0 0 14px}
+.st.ok{color:#8fe3a8}.st.er{color:#ffb0c8}
+.prev{overflow-x:auto;padding:10px 0 18px}
+.prev .bar{font-size:clamp(7px,2.05vw,13px);width:max-content}
+.card{background:#1f1219;border:1px solid #3a2330;border-radius:14px;padding:16px;margin-bottom:14px}
+.card h2{margin:0 0 10px;font-size:17px;font-weight:800;color:#e9d9e0}
+.goles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.eq{text-align:center}
+.eq .n{font-weight:800;font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.eq .v{font-family:Anton,Impact,sans-serif;font-size:64px;line-height:1.1}
+.fila{display:flex;gap:8px;flex-wrap:wrap}
+button,input,select{font:inherit;font-size:17px}
+button{min-height:48px;border-radius:10px;border:0;padding:0 16px;font-weight:800;cursor:pointer;background:#33212b;color:var(--cr)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--au);outline-offset:2px}
+button.big{flex:1;min-height:64px;font-size:22px;background:var(--pk);color:var(--bk)}
+button.men{flex:0 0 64px;min-height:64px;font-size:24px}
+button.sel{background:var(--pk);color:var(--bk)}
+button.av{background:#5a1630}
+.reloj{font-family:Anton,Impact,sans-serif;font-size:56px;line-height:1.1;font-variant-numeric:tabular-nums}
+input{min-height:48px;border-radius:10px;border:1px solid #4a2d3c;background:#140a11;color:var(--cr);padding:0 12px;width:100%}
+input[type=number]{width:90px}
+label{display:block;font-size:15px;color:#cdbfc6;margin-bottom:6px}
+.seg2{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.seg2 button{padding:0 6px}
+.ayuda{font-size:15px;color:#cdbfc6}
+.ayuda code{color:var(--cr);overflow-wrap:anywhere}
+.nota{font-size:13px;color:#a8949e;margin-top:6px}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script id="estado" type="application/json">{"rival":"Rival","gl":0,"gv":0,"parte":"1ª","corriendo":false,"desde":0,"acum":0,"dur":20,"gol":null}</script>
+<script id="app">
+{
+const DEF={rival:"Rival",gl:0,gv:0,parte:"1ª",corriendo:false,desde:0,acum:0,dur:20,gol:null};
+let S;
+try{S=Object.assign({},DEF,JSON.parse(document.getElementById('estado').textContent))}catch(e){S=Object.assign({},DEF)}
+const root=document.getElementById('root');
+const esc=v=>String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const modo=()=>location.hash==='#panel'?'panel':'marcador';
+const ms=()=>S.acum+(S.corriendo?Date.now()-S.desde:0);
+const fmt=t=>{const s=Math.max(0,Math.floor(t/1000));return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')};
+const etiqueta=p=>({"1ª":"1ª PARTE","Descanso":"DESCANSO","2ª":"2ª PARTE","Final":"FINAL"}[p]||p);
+const ini=n=>{const w=String(n).trim().split(/\s+/).filter(Boolean);return ((w[0]||'R')[0]+(w[1]?w[1][0]:(w[0]||'')[1]||'')).toUpperCase()};
+const ESCUDO='<svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="49" fill="#111"/><circle cx="50" cy="50" r="43" fill="#ff2d8a"/><circle cx="50" cy="50" r="35" fill="#f6ecd8"/><path d="M62 49h6a9 9 0 0 1 0 18h-6" fill="none" stroke="#111" stroke-width="4.5"/><rect x="31" y="42" width="32" height="35" rx="6" fill="#e8a317" stroke="#111" stroke-width="3.5"/><polygon points="47,53 54,58 51.5,66 42.5,66 40,58" fill="#111"/><path d="M47 53v-9M54 58l8-3M51.5 66l5 8M42.5 66l-5 8M40 58l-8-3" stroke="#111" stroke-width="2.5"/><g fill="#fff" stroke="#111" stroke-width="2.5"><circle cx="35" cy="42" r="7"/><circle cx="46" cy="37" r="8.5"/><circle cx="58" cy="41" r="7.5"/></g><rect x="31" y="41" width="32" height="5" fill="#fff"/></svg>';
+function barra(){
+  const g=S.gol&&Date.now()-S.gol.t<7000&&modo()==='marcador'
+    ?`<div class="gol${S.gol.e==='V'?' r':''}">${S.gol.e==='L'?'¡¡GOOOL DEL ASTON BIRRA!!':'Gol de '+esc(S.rival)}</div>`:'';
+  return `<div class="bar" role="img" aria-label="Aston Birra ${S.gl}, ${esc(S.rival)} ${S.gv}">
+  <div class="seg esc">${ESCUDO}</div>
+  <div class="seg"><span class="nom">Aston Birra</span></div>
+  <div class="seg res"><span>${S.gl}–${S.gv}</span></div>
+  <div class="seg"><span class="nom">${esc(S.rival)}</span></div>
+  <div class="seg riv"><div class="ini">${esc(ini(S.rival))}</div></div>
+  <div class="seg rel"><b class="t">${fmt(ms())}</b><i>${esc(etiqueta(S.parte))}</i></div>${g}</div>`;
+}
+let estado='',tipoEstado='';
+function panel(){
+  const P=["1ª","Descanso","2ª","Final"];
+  return `<div class="wrap">
+  <h1>Marcador <em>Aston Birra</em></h1>
+  <p class="st ${tipoEstado}" id="st">${esc(estado)}</p>
+  <div class="prev">${barra()}</div>
+  <div class="card"><h2>Nombre del rival</h2>
+    <label for="riv">Escribe el nombre y pulsa Guardar</label>
+    <div class="fila"><input id="riv" maxlength="18" value="${esc(S.rival)}" enterkeyhint="done" style="flex:1;width:auto"><button class="sel" data-a="riv">Guardar</button></div>
+  </div>
+  <div class="card"><h2>Goles</h2><div class="goles">
+    <div class="eq"><div class="n">Aston Birra</div><div class="v">${S.gl}</div>
+      <div class="fila"><button class="men" data-a="gl-">−</button><button class="big" data-a="gl+">+ GOL</button></div></div>
+    <div class="eq"><div class="n">${esc(S.rival)}</div><div class="v">${S.gv}</div>
+      <div class="fila"><button class="men" data-a="gv-">−</button><button class="big" data-a="gv+">+ GOL</button></div></div>
+  </div></div>
+  <div class="card"><h2>Reloj</h2>
+    <div class="reloj t">${fmt(ms())}</div>
+    <div class="fila" style="margin:8px 0 12px">
+      <button class="big" data-a="play">${S.corriendo?'Pausar':'Iniciar'}</button>
+      <button data-a="cero">Poner a 0:00</button></div>
+    <label for="min">Poner el reloj en el minuto</label>
+    <div class="fila"><input id="min" type="number" min="0" max="120" inputmode="numeric" value="${Math.floor(ms()/60000)}"><button data-a="min">Aplicar</button></div>
+  </div>
+  <div class="card"><h2>Parte</h2>
+    <div class="seg2">${P.map(p=>`<button data-a="parte" data-v="${p}" class="${S.parte===p?'sel':''}">${p==='1ª'||p==='2ª'?p+' parte':p}</button>`).join('')}</div>
+    <p class="nota">Al pasar a la 2ª parte, el reloj se coloca en el minuto ${S.dur} y queda en pausa hasta que pulses Iniciar.</p>
+    <label for="dur" style="margin-top:10px">Minutos por parte</label>
+    <input id="dur" type="number" min="1" max="60" inputmode="numeric" value="${S.dur}">
+  </div>
+  <div class="card"><h2>Nuevo partido</h2>
+    <p class="nota" style="margin-top:0">Pone el resultado a 0–0, el reloj a 00:00 y la 1ª parte. Mantiene el nombre del rival.</p>
+    <div class="fila"><button class="av" data-a="reset" id="reset">Nuevo partido (todo a cero)</button></div>
+  </div>
+  <div class="card ayuda"><h2>Cómo usarlo</h2>
+    <p>En PRISM, añade un widget web con el enlace de esta página <b>sin</b> <code>#panel</code> al final: se ve solo la barra del marcador.</p>
+    <p>Para llevar el marcador, abre esta misma página con <code>#panel</code> al final. Cada cambio llega al directo en uno o dos segundos. Puede usarlo cualquiera que tenga este enlace, sin cuenta.</p>
+  </div></div>`;
+}
+function render(){
+  const k=modo()==='panel'?'p':'m';
+  document.body.className=k;document.documentElement.classList.remove('p','m');document.documentElement.classList.add(k);
+  root.innerHTML=k==='p'?panel():`<div class="ov">${barra()}</div>`;
+  ajusta();
+}
+function ajusta(){
+  if(modo()!=='marcador')return;
+  const b=document.querySelector('.ov .bar');if(!b)return;
+  b.style.fontSize='10px';
+  const w=b.offsetWidth,h=b.offsetHeight;if(!w||!h)return;
+  b.style.fontSize=(10*Math.min(innerWidth/w,innerHeight/h))+'px';
+}
+addEventListener('resize',ajusta);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(ajusta);
+function aviso(t,k){estado=t;tipoEstado=k||'';const e=document.getElementById('st');if(e){e.textContent=t;e.className='st '+tipoEstado}}
+let tmr=null,pend=false,ult='';
+const TOPIC='astonbirra-2eaa35fd975f',NT='https://ntfy.sh/'+TOPIC;
+function guardar(){clearTimeout(tmr);pend=true;aviso('Enviando…');tmr=setTimeout(async()=>{
+  try{const r=await fetch(NT,{method:'POST',body:JSON.stringify(S)});if(!r.ok)throw 0;aviso('Enviado al directo ✓','ok')}
+  catch(e){aviso('No se pudo enviar. Revisa la conexión y repite.','er')}
+  pend=false;
+},300)}
+function cambia(fn){fn(S);ult=JSON.stringify(S);render();guardar()}
+function aplica(txt){
+  try{const n=Object.assign({},DEF,JSON.parse(txt)),j=JSON.stringify(n);
+    if(j===ult||pend)return;ult=j;S=n;
+    const a=document.activeElement;if(!(modo()==='panel'&&a&&a.tagName==='INPUT'))render()}catch(e){}
+}
+async function cargaInicial(){
+  try{const r=await fetch(NT+'/json?poll=1&since=12h');const ls=(await r.text()).trim().split('\n').filter(Boolean);
+    for(let i=ls.length-1;i>=0;i--){const d=JSON.parse(ls[i]);if(d.event==='message'&&d.message){aplica(d.message);break}}}catch(e){}
+}
+function conecta(){
+  try{const es=new EventSource(NT+'/sse');
+    es.onmessage=e=>{try{const d=JSON.parse(e.data);if(d.event==='message'&&d.message)aplica(d.message)}catch(x){}};
+    es.onopen=()=>{if(modo()==='panel'&&!estado)aviso('Conectado ✓','ok')};
+    es.onerror=()=>{if(modo()==='panel')aviso('Reconectando…','er')};
+  }catch(e){setInterval(cargaInicial,3000)}
+}
+root.addEventListener('click',ev=>{
+  const b=ev.target.closest('button[data-a]');if(!b)return;const a=b.dataset.a;
+  if(a==='riv'){guardaRival();return}
+  if(a==='gl+')cambia(s=>{s.gl++;s.gol={e:'L',t:Date.now()}});
+  else if(a==='gv+')cambia(s=>{s.gv++;s.gol={e:'V',t:Date.now()}});
+  else if(a==='gl-')cambia(s=>{s.gl=Math.max(0,s.gl-1);s.gol=null});
+  else if(a==='gv-')cambia(s=>{s.gv=Math.max(0,s.gv-1);s.gol=null});
+  else if(a==='play')cambia(s=>{if(s.corriendo){s.acum+=Date.now()-s.desde;s.corriendo=false}else{s.desde=Date.now();s.corriendo=true}});
+  else if(a==='cero')cambia(s=>{s.acum=0;s.corriendo=false});
+  else if(a==='min'){const v=parseInt(document.getElementById('min').value,10);if(!isNaN(v)&&v>=0)cambia(s=>{s.acum=v*60000;if(s.corriendo)s.desde=Date.now()})}
+  else if(a==='parte'){const p=b.dataset.v;cambia(s=>{
+    if(s.corriendo){s.acum+=Date.now()-s.desde;s.corriendo=false}
+    if(p==='2ª'&&s.parte!=='2ª')s.acum=s.dur*60000;
+    s.parte=p})}
+  else if(a==='reset'){
+    if(b.dataset.ok!=='1'){b.dataset.ok='1';b.textContent='Toca otra vez para confirmar';setTimeout(()=>{if(b.isConnected){b.dataset.ok='';b.textContent='Nuevo partido (todo a cero)'}},4000);return}
+    cambia(s=>Object.assign(s,DEF,{rival:s.rival,dur:s.dur}))}
+});
+function guardaRival(){const t=document.getElementById('riv');if(!t)return;const v=t.value.trim().slice(0,18)||'Rival';if(v!==S.rival)cambia(s=>{s.rival=v});else aviso('Nombre guardado ✓','ok')}
+root.addEventListener('keydown',ev=>{if(ev.target.id==='riv'&&ev.key==='Enter'){ev.preventDefault();guardaRival()}});
+root.addEventListener('change',ev=>{
+  const t=ev.target;
+  if(t.id==='riv')guardaRival();
+  else if(t.id==='dur'){const v=parseInt(t.value,10);if(v>0&&v<=60&&v!==S.dur)cambia(s=>{s.dur=v})}
+});
+addEventListener('hashchange',render);
+render();cargaInicial();conecta();
+setInterval(()=>{const t=fmt(ms());document.querySelectorAll('.t').forEach(e=>{if(e.textContent!==t)e.textContent=t});
+  const g=document.querySelector('.gol');if(g&&!(S.gol&&Date.now()-S.gol.t<7000))g.remove()},500);
+}
+</script>
+</body>
+</html>
